@@ -87,3 +87,35 @@ for (veggie in plotveggies) {
   plotmeans(Gewicht~Supermarkt, x[x$Name==veggie,], main=veggie, ylab = "Gewicht (g)")
 }
 
+# Using date as factor
+dates = as.Date(x$Datum, "%d.%m.%Y")
+plot(dates, xlab="Data point index", ylab="Date of purchase")
+x$Monat = factor(strftime(dates, "%b"))
+
+aov2 = list()
+noaov2 = c()
+for (veggie in levels(x$Name)) {
+  # Save result in list
+  tryCatch(
+    {
+      aov2[[veggie]] = aov(Gewicht~Monat, x[x$Name==veggie,])
+    },
+    # Need to catch errors because for some vegetables there are just not enough data
+    error=function(cond) {
+      message(paste("Error with vegetable:", veggie))
+      #message("\tHere's the original error message:")
+      #message(paste("\t", cond, sep=""))
+    }
+  )
+  if (is.null(aov2[[veggie]])) noaov2 = c(noaov2, veggie)
+}
+
+# No significant differences between months...?!
+(aov2_summary = lapply(aov2, summary) )
+
+# Confirmed visually
+par(mfrow=c(5,2), mar=c(2,4,2,1))
+plotveggies2 = setdiff(levels(x$Name), noaov2)
+for (veggie in plotveggies2) {
+  plotmeans(Gewicht~Monat, x[x$Name==veggie,], main=veggie, ylab = "Gewicht (g)")
+}
