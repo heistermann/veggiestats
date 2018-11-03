@@ -35,6 +35,7 @@ summary(aov_markets)
 # BUT THAT DOES NOT MAKE ANY SENSE, OF COURSE... 
 # --> need to apply ANOVA per vegetable!
 aov1 = list()
+noaov1 = c()
 for (veggie in levels(x$Name)) {
   # Save result in list
   tryCatch(
@@ -44,13 +45,15 @@ for (veggie in levels(x$Name)) {
     # Need to catch errors because for some vegetables there are just not enough data
     error=function(cond) {
     message(paste("Error with vegetable:", veggie))
-    message("\tHere's the original error message:")
-    message(paste("\t", cond, sep=""))
-    # Assign NULL result to that veggie
-    aov1[[veggie]] = NULL
+    #message("\tHere's the original error message:")
+    #message(paste("\t", cond, sep=""))
     }
   )
+  if (is.null(aov1[[veggie]])) noaov1 = c(noaov1, veggie)
 }
+# No ANOVA
+noaov1
+
 # Now get aov summary from our result list
 (aov1_summary = lapply(aov1, summary) )
 significant = c()
@@ -78,9 +81,9 @@ par(op)
 # Another diagnostic plot from gplots
 # install.packages("gplots") 
 library(gplots)
-window()
-par(mfrow=c(5,2), mar=c(2,4,2,1))
-for (veggie in levels(x$Name)) {
+plotveggies = setdiff(levels(x$Name), noaov1)
+par(mfrow=c(4,2), mar=c(2,4,2,1))
+for (veggie in plotveggies) {
   plotmeans(Gewicht~Supermarkt, x[x$Name==veggie,], main=veggie, ylab = "Gewicht (g)")
 }
 
